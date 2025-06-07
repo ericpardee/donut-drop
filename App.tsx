@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback, useRef, useLayoutEffect } from 'react';
 import type { Unicorn as UnicornType, Donut as DonutType, LeaderboardEntry } from './types';
 import { GameState } from './types';
@@ -20,17 +19,17 @@ import {
   HORN_CATCH_HEIGHT,
   LeftArrowIcon,
   RightArrowIcon,
-  UpArrowIcon, 
+  UpArrowIcon,
   DASH_SPEED_MULTIPLIER,
   DASH_DURATION_MS,
   DASH_CONSECUTIVE_PRESS_THRESHOLD,
   DASH_MAX_INTERVAL_MS,
-  JUMP_INITIAL_VELOCITY, 
-  GRAVITY, 
+  JUMP_INITIAL_VELOCITY,
+  GRAVITY,
   LEADERBOARD_MAX_ENTRIES,
   LOCAL_STORAGE_LEADERBOARD_KEY,
-  SCORE_TO_LEVEL_UP, 
-  TrophyIcon, 
+  SCORE_TO_LEVEL_UP,
+  TrophyIcon,
 } from './constants';
 import StartScreen from './components/StartScreen';
 import GameOverScreen from './components/GameOverScreen';
@@ -61,8 +60,8 @@ const App: React.FC = () => {
     width: UNICORN_WIDTH,
     height: UNICORN_HEIGHT,
     facingDirection: 'right',
-    isJumping: false, 
-    velocityY: 0, 
+    isJumping: false,
+    velocityY: 0,
   });
   const [donuts, setDonuts] = useState<DonutType[]>([]);
   const [scale, setScale] = useState<number>(1);
@@ -75,6 +74,23 @@ const App: React.FC = () => {
 
   const lastDonutSpawnTimeRef = useRef<number>(0);
   const gameLoopRequestRef = useRef<number | null>(null);
+  // Add refs to track current values for game loop
+  const currentScoreRef = useRef<number>(0);
+  const currentMissedDonutsRef = useRef<number>(0);
+  const currentLevelRef = useRef<number>(1);
+
+  // Update refs when state changes
+  useEffect(() => {
+    currentScoreRef.current = score;
+  }, [score]);
+
+  useEffect(() => {
+    currentMissedDonutsRef.current = missedDonuts;
+  }, [missedDonuts]);
+
+  useEffect(() => {
+    currentLevelRef.current = level;
+  }, [level]);
 
   useEffect(() => {
     try {
@@ -99,9 +115,9 @@ const App: React.FC = () => {
 
 
   const checkAndPrepareForHighScoreEntry = useCallback((currentScore: number) => {
-    const isHighScore = leaderboard.length < LEADERBOARD_MAX_ENTRIES || 
-                        currentScore > leaderboard[leaderboard.length - 1]?.score ||
-                        (leaderboard.length > 0 && currentScore > Math.min(...leaderboard.map(e => e.score)));
+    const isHighScore = leaderboard.length < LEADERBOARD_MAX_ENTRIES ||
+      currentScore > leaderboard[leaderboard.length - 1]?.score ||
+      (leaderboard.length > 0 && currentScore > Math.min(...leaderboard.map(e => e.score)));
 
     if (isHighScore && currentScore > 0) {
       setGameState(GameState.EnteringHighScore);
@@ -133,7 +149,7 @@ const App: React.FC = () => {
   useLayoutEffect(() => {
     const calculateScale = () => {
       const nativeGameWidth = GAME_WIDTH;
-      const controlsHeightEstimate = 120; 
+      const controlsHeightEstimate = 120;
       const nativeTotalHeight = GAME_HEIGHT + controlsHeightEstimate;
 
       const viewportWidth = window.innerWidth;
@@ -141,11 +157,11 @@ const App: React.FC = () => {
 
       const scaleBasedOnWidth = viewportWidth / nativeGameWidth;
       const scaleBasedOnHeight = viewportHeight / nativeTotalHeight;
-      
+
       let newScale = Math.min(scaleBasedOnWidth, scaleBasedOnHeight);
-      
-      newScale = Math.min(1, newScale); 
-      newScale *= 0.98; 
+
+      newScale = Math.min(1, newScale);
+      newScale *= 0.98;
 
       setScale(newScale);
     };
@@ -165,6 +181,12 @@ const App: React.FC = () => {
     setMissedDonuts(0);
     setLevel(1);
     setShowLevelUpMessage(false);
+
+    // Reset refs immediately
+    currentScoreRef.current = 0;
+    currentMissedDonutsRef.current = 0;
+    currentLevelRef.current = 1;
+
     setUnicorn({
       id: 'unicorn',
       x: GAME_WIDTH / 2 - UNICORN_WIDTH / 2,
@@ -172,8 +194,8 @@ const App: React.FC = () => {
       width: UNICORN_WIDTH,
       height: UNICORN_HEIGHT,
       facingDirection: 'right',
-      isJumping: false, 
-      velocityY: 0,   
+      isJumping: false,
+      velocityY: 0,
     });
     setDonuts([]);
     setLastInputInfo({ direction: null, time: 0, count: 0 });
@@ -202,7 +224,7 @@ const App: React.FC = () => {
       if (activeDash && activeDash.direction === direction && currentTime < activeDash.endTime) {
         currentSpeed = UNICORN_SPEED * DASH_SPEED_MULTIPLIER;
       } else if (activeDash && currentTime >= activeDash.endTime) {
-        setActiveDash(null); 
+        setActiveDash(null);
       }
 
       let newX = prevUnicorn.x;
@@ -210,7 +232,7 @@ const App: React.FC = () => {
 
       if (direction === 'left') {
         newX = Math.max(0, prevUnicorn.x - currentSpeed);
-      } else { 
+      } else {
         newX = Math.min(GAME_WIDTH - UNICORN_WIDTH, prevUnicorn.x + currentSpeed);
       }
       return { ...prevUnicorn, x: newX, facingDirection: newFacingDirection };
@@ -233,7 +255,7 @@ const App: React.FC = () => {
 
     if (updatedInputInfo.count >= DASH_CONSECUTIVE_PRESS_THRESHOLD) {
       if (!activeDash || activeDash.direction !== direction || currentTime > activeDash.endTime) {
-         setActiveDash({ direction, endTime: currentTime + DASH_DURATION_MS });
+        setActiveDash({ direction, endTime: currentTime + DASH_DURATION_MS });
       }
     }
     handleMoveUnicorn(direction);
@@ -268,7 +290,7 @@ const App: React.FC = () => {
         if (prevUnicorn.isJumping) {
           let newY = prevUnicorn.y + prevUnicorn.velocityY;
           let newVelocityY = prevUnicorn.velocityY + GRAVITY;
-          
+
           const groundY = GAME_HEIGHT - UNICORN_HEIGHT - UNICORN_INITIAL_Y_OFFSET;
           if (newY >= groundY) {
             newY = groundY;
@@ -279,7 +301,7 @@ const App: React.FC = () => {
         }
         return prevUnicorn;
       });
-      
+
       const currentDonutSpawnInterval = DONUT_SPAWN_INTERVAL;
       if (currentTime - lastDonutSpawnTimeRef.current > currentDonutSpawnInterval) {
         lastDonutSpawnTimeRef.current = currentTime;
@@ -295,13 +317,15 @@ const App: React.FC = () => {
         setDonuts(prevDonuts => [...prevDonuts, newDonut]);
       }
 
-      let scoreFromThisTick = score; 
-      let missedInThisTick = 0;
-      
-      // It's important to get the most recent unicorn state for collision detection within this tick.
-      let currentUnicornState = unicorn;
-      setUnicorn(u => { currentUnicornState = u; return u; });
+      let scoreFromThisTick = currentScoreRef.current;
+      let donutMissedThisTick = false;
 
+      // Get the current unicorn state without causing additional state updates
+      let currentUnicornState: UnicornType;
+      setUnicorn(u => {
+        currentUnicornState = u;
+        return u;
+      });
 
       setDonuts(prevDonuts => {
         const updatedDonuts = prevDonuts.map(donut => {
@@ -313,10 +337,10 @@ const App: React.FC = () => {
           let hornCenterX;
           if (currentUnicornState.facingDirection === 'right') {
             hornCenterX = currentUnicornState.x + currentUnicornState.width * HORN_VISUAL_X_RATIO;
-          } else { 
+          } else {
             hornCenterX = currentUnicornState.x + currentUnicornState.width * (1 - HORN_VISUAL_X_RATIO);
           }
-          
+
           const hornCatchMinX = hornCenterX - HORN_CATCH_WIDTH / 2;
           const hornCatchMaxX = hornCenterX + HORN_CATCH_WIDTH / 2;
           const hornCatchMinY = currentUnicornState.y + HORN_CATCH_OFFSET_Y;
@@ -326,17 +350,18 @@ const App: React.FC = () => {
           const donutBottomY = newY + donut.height;
 
           if (
-            !currentUnicornState.isJumping && // Simplified: only catch if on ground. More complex horn logic might be needed if catching mid-air.
-                                         // Or, remove this if horn position is always absolute relative to unicorn.y
+            !currentUnicornState.isJumping &&
             donutBottomY >= hornCatchMinY &&
-            newY <= hornCatchMaxY &&    
-            donutCenterX >= hornCatchMinX && 
+            newY <= hornCatchMaxY &&
+            donutCenterX >= hornCatchMinX &&
             donutCenterX <= hornCatchMaxX
           ) {
             scoreFromThisTick += 10;
-            setScore(s => s + 10); // Update React state
+            currentScoreRef.current = scoreFromThisTick; // Update ref immediately
+            setScore(scoreFromThisTick); // Update React state
 
-            if (level === 1 && scoreFromThisTick >= SCORE_TO_LEVEL_UP) {
+            if (currentLevelRef.current === 1 && scoreFromThisTick >= SCORE_TO_LEVEL_UP) {
+              currentLevelRef.current = 2; // Update ref immediately
               setLevel(2); // Update React state
               setShowLevelUpMessage(true);
               setTimeout(() => setShowLevelUpMessage(false), 3000);
@@ -344,34 +369,34 @@ const App: React.FC = () => {
             return { ...donut, y: newY, caught: true };
           }
 
-          if (newY + donut.height >= GAME_HEIGHT) {
-            missedInThisTick++;
+          // Only allow one donut to be missed per tick to prevent multiple life losses
+          if (newY + donut.height >= GAME_HEIGHT && !donutMissedThisTick) {
+            donutMissedThisTick = true;
             return { ...donut, y: newY, missed: true };
           }
           return { ...donut, y: newY };
         });
-        
-        if (missedInThisTick > 0) {
-            setMissedDonuts(m => m + missedInThisTick); // Update React state
+
+        if (donutMissedThisTick) {
+          currentMissedDonutsRef.current += 1; // Update ref immediately
+          setMissedDonuts(currentMissedDonutsRef.current); // Update React state with new value
         }
         return updatedDonuts.filter(d => !d.caught && !d.missed);
       });
-      
-      const totalMissedAfterThisTick = missedDonuts + missedInThisTick;
 
-      if (totalMissedAfterThisTick >= MAX_MISSED_DONUTS) {
+      // Use the updated ref values for game over check
+      if (currentMissedDonutsRef.current >= MAX_MISSED_DONUTS) {
         // Check if a level up (from L1 to L2) was triggered in THIS tick
-        if (level === 1 && scoreFromThisTick >= SCORE_TO_LEVEL_UP) {
+        if (currentLevelRef.current === 1 && scoreFromThisTick >= SCORE_TO_LEVEL_UP) {
           // Level up is happening, so don't end the game yet.
-          // The game loop will continue, and next tick `level` state will be 2.
         } else {
           // No level up, or already on level 2 and game over condition met.
           if (gameLoopRequestRef.current) cancelAnimationFrame(gameLoopRequestRef.current);
-          checkAndPrepareForHighScoreEntry(scoreFromThisTick); 
-          return; 
+          checkAndPrepareForHighScoreEntry(scoreFromThisTick);
+          return;
         }
       }
-      
+
       gameLoopRequestRef.current = requestAnimationFrame(gameTick);
     };
 
@@ -382,16 +407,16 @@ const App: React.FC = () => {
         cancelAnimationFrame(gameLoopRequestRef.current);
       }
     };
-  }, [gameState, unicorn, activeDash, score, missedDonuts, level, checkAndPrepareForHighScoreEntry, GRAVITY, UNICORN_INITIAL_Y_OFFSET, UNICORN_HEIGHT, HORN_VISUAL_X_RATIO, HORN_CATCH_WIDTH, HORN_CATCH_OFFSET_Y, HORN_CATCH_HEIGHT]);
+  }, [gameState, unicorn, activeDash, checkAndPrepareForHighScoreEntry, GRAVITY, UNICORN_INITIAL_Y_OFFSET, UNICORN_HEIGHT, HORN_VISUAL_X_RATIO, HORN_CATCH_WIDTH, HORN_CATCH_OFFSET_Y, HORN_CATCH_HEIGHT]);
 
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (gameState === GameState.EnteringHighScore) {
         if (event.key === 'Enter' && currentPlayerInitials.trim().length === 3) {
-            handleInitialsSubmit();
+          handleInitialsSubmit();
         }
-        return; 
+        return;
       }
 
       if (gameState !== GameState.Playing && !showLevelUpMessage) {
@@ -426,17 +451,17 @@ const App: React.FC = () => {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-pink-200 via-purple-200 to-indigo-200 p-2 sm:p-4 select-none overflow-hidden">
       {gameState === GameState.StartScreen && <StartScreen onStartGame={startGame} leaderboard={leaderboard} />}
-      
+
       {gameState === GameState.Playing && (
-        <div 
+        <div
           style={{
-            width: GAME_WIDTH, 
+            width: GAME_WIDTH,
             transform: `scale(${scale})`,
             transformOrigin: 'top center',
             transition: 'transform 0.1s ease-out',
-            position: 'relative', 
+            position: 'relative',
           }}
-          className="flex flex-col items-center" 
+          className="flex flex-col items-center"
         >
           <GameArea
             unicorn={unicorn}
@@ -446,17 +471,17 @@ const App: React.FC = () => {
             level={level}
           />
           {showLevelUpMessage && (
-            <div 
+            <div
               className="absolute inset-0 flex flex-col items-center justify-center bg-black bg-opacity-50 z-20 rounded-lg"
-              style={{ width: GAME_WIDTH, height: GAME_HEIGHT}} 
+              style={{ width: GAME_WIDTH, height: GAME_HEIGHT }}
             >
-              <p className="font-game text-5xl md:text-7xl text-yellow-300 animate-bounce" style={{textShadow: '3px 3px #000'}}>Level Up!</p>
+              <p className="font-game text-5xl md:text-7xl text-yellow-300 animate-bounce" style={{ textShadow: '3px 3px #000' }}>Level Up!</p>
               <p className="font-game text-3xl md:text-4xl text-white mt-4">Welcome to Level {level}!</p>
             </div>
           )}
-          <div 
+          <div
             className="flex justify-around mt-4 w-full px-2"
-            style={{ maxWidth: GAME_WIDTH * 0.8 }} 
+            style={{ maxWidth: GAME_WIDTH * 0.8 }}
           >
             <button
               onClick={() => processInputAttempt('left')}
@@ -466,7 +491,7 @@ const App: React.FC = () => {
             >
               <LeftArrowIcon className="w-12 h-12" />
             </button>
-             <button
+            <button
               onClick={handleJump}
               onTouchStart={(e) => { e.preventDefault(); handleJump(); }}
               className="bg-green-500 text-white font-bold py-5 px-8 rounded-lg shadow-xl active:bg-green-600 transform active:scale-95 transition-transform focus:outline-none focus:ring-2 focus:ring-green-300"

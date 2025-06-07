@@ -4,8 +4,8 @@ A whimsical browser game where you control a magical unicorn to catch falling do
 
 ## 🎮 How to Play
 
-- **Move**: Use A/D keys or Left/Right arrow keys to move the unicorn
-- **Jump**: Press W or Up arrow to jump and catch donuts in mid-air
+- **Move**: Use Left/Right arrow keys or onscreen pink buttons to move the unicorn
+- **Jump**: Press Up arrow onscreen green button to jump and catch donuts in mid-air
 - **Dash**: Double-tap movement keys quickly for a speed boost
 - **Catch donuts** on the unicorn's horn to score points
 - **Don't let donuts hit the ground** - you can only miss 5 before game over!
@@ -15,11 +15,13 @@ A whimsical browser game where you control a magical unicorn to catch falling do
 **Prerequisites:** Node.js
 
 1. **Install dependencies:**
+
    ```bash
    npm install
    ```
 
 2. **Run the development server:**
+
    ```bash
    npm run dev
    ```
@@ -49,7 +51,7 @@ This game was primarily vibe coded using **Google Gemini** with a little help fr
 
 ## 🏗️ Project Structure
 
-```
+``` plaintext
 donut-drop/
 ├── components/          # React components
 │   ├── GameArea.tsx    # Main game logic and rendering
