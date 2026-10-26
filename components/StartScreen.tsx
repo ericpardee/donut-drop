@@ -19,7 +19,7 @@ const StartScreen: React.FC<StartScreenProps> = ({ onStartGame, leaderboard }) =
       </div>
       <UnicornIcon className="w-24 h-24 md:w-32 md:h-32 my-4 md:my-6" />
       <p className="font-game text-xl md:text-2xl text-purple-600 mb-6">
-        Help Luna's unicorn catch the falling donuts!
+        Help the unicorn catch the falling donuts!
       </p>
       <p className="font-game text-base md:text-lg text-gray-700 mb-1">Use <kbd className="px-2 py-1.5 text-xs font-semibold text-gray-800 bg-gray-100 border border-gray-300 rounded-lg">←</kbd> and <kbd className="px-2 py-1.5 text-xs font-semibold text-gray-800 bg-gray-100 border border-gray-300 rounded-lg">→</kbd> arrow keys to move.</p>
       <p className="font-game text-base md:text-lg text-gray-700 mb-2">Press <kbd className="px-2 py-1.5 text-xs font-semibold text-gray-800 bg-gray-100 border border-gray-300 rounded-lg">↑</kbd> to jump.</p>
@@ -49,7 +49,7 @@ const StartScreen: React.FC<StartScreenProps> = ({ onStartGame, leaderboard }) =
           </ol>
         </div>
       )}
-      <p className="font-game text-xs md:text-sm text-pink-400 mt-6">A game for Luna! ❤️</p>
+      <p className="font-game text-xs md:text-sm text-pink-400 mt-6">Made with love! ❤️</p>
     </div>
   );
 };
